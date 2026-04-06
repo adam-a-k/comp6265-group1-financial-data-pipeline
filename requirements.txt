@@ -6,3 +6,4 @@ streamlit
 schedule
 boto3
 dotenv
+pytest
