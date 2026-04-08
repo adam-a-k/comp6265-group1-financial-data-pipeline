@@ -1,13 +1,24 @@
 import json
 from pathlib import Path
 from datetime import datetime
+from dotenv import load_dotenv
+import os
+import boto3
 
-def write_to_lake(dataset, record):
+load_dotenv()
 
-    folder = Path("data_lake") / dataset
-    folder.mkdir(parents=True, exist_ok=True)
+s3 = boto3.client(
+    "s3",
+    endpoint_url=os.getenv("R2_ENDPOINT"),
+    aws_access_key_id=os.getenv("R2_ACCESS_KEY"),
+    aws_secret_access_key=os.getenv("R2_SECRET_KEY"),
+)
 
-    file = folder / f"{datetime.utcnow().date()}.json"
+def write_to_lake(df, filename):
 
-    with open(file, "a") as f:
-        f.write(json.dumps(record) + "\n")
+    csv_buffer = df.to_csv(index=False).encode()
+    s3.put_object(
+        Bucket=os.getenv("R2_BUCKET_NAME"),
+        Key=filename,
+        Body=csv_buffer
+    )
