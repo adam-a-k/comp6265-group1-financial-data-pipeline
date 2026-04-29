@@ -10,6 +10,8 @@ import requests
 
 from .base import BaseFetcher
 from .utils import retry, setup_logger
+from dotenv import load_dotenv
+load_dotenv()
 
 logger = setup_logger(__name__)
 

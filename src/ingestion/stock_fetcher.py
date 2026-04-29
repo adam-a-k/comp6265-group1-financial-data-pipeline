@@ -11,7 +11,8 @@ import requests
 from .base import BaseFetcher
 from .config import ALPHA_VANTAGE_KEY
 from .utils import rate_limit, retry, setup_logger
-
+from dotenv import load_dotenv
+load_dotenv()
 logger = setup_logger(__name__)
 
 

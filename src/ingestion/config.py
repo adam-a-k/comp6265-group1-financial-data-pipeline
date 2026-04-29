@@ -7,13 +7,14 @@ python-dotenv, or export variables directly in your shell / CI environment.
 """
 
 import os
-
+from dotenv import load_dotenv
 # ---------------------------------------------------------------------------
 # API credentials
 # ---------------------------------------------------------------------------
 
 #: Alpha Vantage API key.  Defaults to "demo" which is the public demo key
 #: with very limited rate limits.  Set ALPHA_VANTAGE_KEY in your environment.
+load_dotenv()
 ALPHA_VANTAGE_KEY: str = os.getenv("ALPHA_VANTAGE_KEY", "demo")
 
 # ---------------------------------------------------------------------------
