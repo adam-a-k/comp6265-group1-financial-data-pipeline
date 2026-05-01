@@ -1,0 +1,96 @@
+from flask import Flask, jsonify
+from flask_cors import CORS
+import random
+import datetime
+
+app = Flask(__name__)
+CORS(app)  # Allows your React frontend to call this API
+
+# ─────────────────────────────────────────────
+# STOCKS endpoint  →  GET /api/stocks
+# ─────────────────────────────────────────────
+@app.route("/api/stocks")
+def get_stocks():
+    """
+    In production: query your warehouse/lake here.
+    For now: returns realistic mock data.
+    """
+    symbols = ["AAPL", "GOOGL", "MSFT", "AMZN", "TSLA", "NVDA"]
+    base_prices = {"AAPL": 189, "GOOGL": 141, "MSFT": 378, "AMZN": 185, "TSLA": 177, "NVDA": 875}
+
+    stocks = []
+    for sym in symbols:
+        base = base_prices[sym]
+        change_pct = round(random.uniform(-3.5, 3.5), 2)
+        price = round(base * (1 + change_pct / 100), 2)
+        stocks.append({
+            "symbol": sym,
+            "price": price,
+            "change": change_pct,
+            "volume": random.randint(10_000_000, 90_000_000),
+            "history": [round(base * (1 + random.uniform(-0.05, 0.05)), 2) for _ in range(30)]
+        })
+    return jsonify(stocks)
+
+
+# ─────────────────────────────────────────────
+# FOREX endpoint  →  GET /api/forex
+# ─────────────────────────────────────────────
+@app.route("/api/forex")
+def get_forex():
+    """
+    In production: pull from your forex_api ingestion layer.
+    """
+    pairs = [
+        {"pair": "EUR/USD", "base": 1.085},
+        {"pair": "GBP/USD", "base": 1.271},
+        {"pair": "USD/JPY", "base": 149.5},
+        {"pair": "AUD/USD", "base": 0.652},
+        {"pair": "USD/CAD", "base": 1.362},
+        {"pair": "USD/INR", "base": 83.1},
+    ]
+    result = []
+    for p in pairs:
+        change = round(random.uniform(-0.8, 0.8), 4)
+        result.append({
+            "pair": p["pair"],
+            "rate": round(p["base"] + change * 0.01, 4),
+            "change": round(change, 4),
+            "change_pct": round(change / p["base"] * 100, 3),
+            "history": [round(p["base"] + random.uniform(-0.02, 0.02), 4) for _ in range(30)]
+        })
+    return jsonify(result)
+
+
+# ─────────────────────────────────────────────
+# NEWS endpoint  →  GET /api/news
+# ─────────────────────────────────────────────
+@app.route("/api/news")
+def get_news():
+    """
+    In production: pull from your news_api ingestion layer.
+    """
+    headlines = [
+        {"title": "Fed holds rates steady amid inflation concerns", "source": "Reuters", "sentiment": "neutral", "category": "macro"},
+        {"title": "NVDA surges 6% on strong AI chip demand forecast", "source": "Bloomberg", "sentiment": "positive", "category": "tech"},
+        {"title": "EUR/USD falls as ECB signals rate cut timeline", "source": "FT", "sentiment": "negative", "category": "forex"},
+        {"title": "Apple announces record buyback programme", "source": "CNBC", "sentiment": "positive", "category": "stocks"},
+        {"title": "Oil prices dip on weaker demand outlook from China", "source": "Reuters", "sentiment": "negative", "category": "commodities"},
+        {"title": "US jobs data beats expectations, market rallies", "source": "WSJ", "sentiment": "positive", "category": "macro"},
+        {"title": "Tesla faces recall on autopilot software update", "source": "Bloomberg", "sentiment": "negative", "category": "stocks"},
+        {"title": "Bank of Japan hints at end of negative rate policy", "source": "Nikkei", "sentiment": "neutral", "category": "forex"},
+    ]
+    now = datetime.datetime.utcnow()
+    result = []
+    for i, h in enumerate(headlines):
+        result.append({
+            **h,
+            "id": i + 1,
+            "timestamp": (now - datetime.timedelta(minutes=i * 18)).strftime("%H:%M"),
+            "ago": f"{i * 18}m ago" if i > 0 else "Just now"
+        })
+    return jsonify(result)
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=8000)
