@@ -1,23 +1,28 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import random
 import datetime
+import os
 
-app = Flask(__name__)
-CORS(app)  # Allows your React frontend to call this API
+app = Flask(__name__, static_folder=os.path.join('..', 'dist'), static_url_path='')
+CORS(app)
 
-# ─────────────────────────────────────────────
-# STOCKS endpoint  →  GET /api/stocks
-# ─────────────────────────────────────────────
+# ── Serve React frontend ──
+@app.route('/')
+def serve():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def static_files(path):
+    if os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    return send_from_directory(app.static_folder, 'index.html')
+
+# ── STOCKS ──
 @app.route("/api/stocks")
 def get_stocks():
-    """
-    In production: query your warehouse/lake here.
-    For now: returns realistic mock data.
-    """
     symbols = ["AAPL", "GOOGL", "MSFT", "AMZN", "TSLA", "NVDA"]
     base_prices = {"AAPL": 189, "GOOGL": 141, "MSFT": 378, "AMZN": 185, "TSLA": 177, "NVDA": 875}
-
     stocks = []
     for sym in symbols:
         base = base_prices[sym]
@@ -32,15 +37,9 @@ def get_stocks():
         })
     return jsonify(stocks)
 
-
-# ─────────────────────────────────────────────
-# FOREX endpoint  →  GET /api/forex
-# ─────────────────────────────────────────────
+# ── FOREX ──
 @app.route("/api/forex")
 def get_forex():
-    """
-    In production: pull from your forex_api ingestion layer.
-    """
     pairs = [
         {"pair": "EUR/USD", "base": 1.085},
         {"pair": "GBP/USD", "base": 1.271},
@@ -61,15 +60,9 @@ def get_forex():
         })
     return jsonify(result)
 
-
-# ─────────────────────────────────────────────
-# NEWS endpoint  →  GET /api/news
-# ─────────────────────────────────────────────
+# ── NEWS ──
 @app.route("/api/news")
 def get_news():
-    """
-    In production: pull from your news_api ingestion layer.
-    """
     headlines = [
         {"title": "Fed holds rates steady amid inflation concerns", "source": "Reuters", "sentiment": "neutral", "category": "macro"},
         {"title": "NVDA surges 6% on strong AI chip demand forecast", "source": "Bloomberg", "sentiment": "positive", "category": "tech"},
@@ -90,7 +83,6 @@ def get_news():
             "ago": f"{i * 18}m ago" if i > 0 else "Just now"
         })
     return jsonify(result)
-
 
 if __name__ == "__main__":
     app.run(debug=True, port=8000)
