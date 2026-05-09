@@ -1,5 +1,5 @@
 """
-ETL Transform Module — Ausaf
+ETL Transform Module — Ausaf, Adam
 Cleans and transforms raw financial data from Akash's ingestion layer.
 Outputs clean DataFrames ready for Adam's PostgreSQL loader.
 """
@@ -12,6 +12,13 @@ from src.utils.logger import log_etl_run
 
 logger = logging.getLogger(__name__)
 
+#Mappings because of inconsistencies between source schema and data transformation
+STOCK_MAPPING  = {"close": "price"}
+CRYPTO_MAPPING = {"close": "price"}
+FOREX_MAPPING  = {"close": "price"}
+
+def map_to_canonical(df: pd.DataFrame, mapping: dict) -> pd.DataFrame:
+    return df.rename(columns=mapping)
 
 # ─────────────────────────────────────────────
 # DATA QUALITY CHECKS
@@ -156,7 +163,8 @@ def transform_stocks(raw_df: pd.DataFrame, user: str = "pipeline_scheduler") -> 
     source = "stocks"
     input_rows = len(raw_df)
 
-    # Stage 1: validate structure
+    # Stage 1: validate structure, map
+    raw_df = map_to_canonical(raw_df, STOCK_MAPPING)
     raw_df = validate_raw_data(raw_df, source)
 
     # Clean
@@ -198,6 +206,8 @@ def transform_crypto(raw_df: pd.DataFrame, user: str = "pipeline_scheduler") -> 
     source = "crypto"
     input_rows = len(raw_df)
 
+    #Do Mapping then validate
+    raw_df = map_to_canonical(raw_df, CRYPTO_MAPPING)
     raw_df = validate_raw_data(raw_df, source)
 
     df = standardise_columns(raw_df.copy())
@@ -235,6 +245,8 @@ def transform_forex(raw_df: pd.DataFrame, user: str = "pipeline_scheduler") -> p
     source = "forex"
     input_rows = len(raw_df)
 
+    #Do mapping then validate
+    raw_df = map_to_canonical(raw_df, FOREX_MAPPING)
     raw_df = validate_raw_data(raw_df, source)
 
     df = standardise_columns(raw_df.copy())
