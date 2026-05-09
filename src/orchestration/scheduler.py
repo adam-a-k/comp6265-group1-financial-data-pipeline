@@ -62,7 +62,7 @@ def etl(ts):
         try:
             stocks_df = read_from_lake(f"stocks/{symbol}/{ts}.csv")
             print(stocks_df)
-            load_to_db(stocks_df, table="stocks", transform_function=transform_stocks)
+            load_to_db(stocks_df, table="stock_prices", transform_function=transform_stocks)
         except Exception as e:
             logger.warning(f"Skipping stocks/{symbol}: {e}")
 
@@ -70,7 +70,7 @@ def etl(ts):
         try:
             forex_df = read_from_lake(f"forex/{from_sym}{to_sym}/{ts}.csv")
             print(forex_df)
-            load_to_db(forex_df, table="forex", transform_function=transform_forex)
+            load_to_db(forex_df, table="forex_rates", transform_function=transform_forex)
         except Exception as e:
             logger.warning(f"Skipping forex/{from_sym}{to_sym}: {e}")
 
@@ -78,7 +78,7 @@ def etl(ts):
         try:
             crypto_df = read_from_lake(f"crypto/{coin}/{ts}.csv")
             print(crypto_df)
-            load_to_db(crypto_df, table="crypto", transform_function=transform_crypto)
+            load_to_db(crypto_df, table="crypto_rates", transform_function=transform_crypto)
         except Exception as e:
             logger.warning(f"Skipping crypto/{coin}: {e}")
 
