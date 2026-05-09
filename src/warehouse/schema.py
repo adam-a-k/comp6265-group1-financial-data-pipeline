@@ -1,3 +1,4 @@
+SCHEMA_SQL = """
 DROP TABLE IF EXISTS stock_prices;
 CREATE TABLE IF NOT EXISTS stock_prices (
     timestamp       TIMESTAMPTZ     NOT NULL,
@@ -45,3 +46,4 @@ CREATE TABLE IF NOT EXISTS news (
     symbol VARCHAR(10),
     sentiment FLOAT
 );
+"""
