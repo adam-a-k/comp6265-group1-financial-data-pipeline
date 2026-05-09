@@ -7,13 +7,14 @@ from src.etl.transform import transform_stocks, transform_crypto, transform_fore
 from src.storage.lake_writer import write_to_lake
 from src.storage.lake_reader import read_from_lake, list_lake_files
 from src.warehouse.db import engine
+from src.warehouse.schema import SCHEMA_SQL
 logger = logging.getLogger(__name__)
 
 def init_db():
-    with open("schema.sql", "r") as f:
-        sql = f.read()
+    # with open("schema.sql", "r") as f:
+    #     sql = f.read()
     with engine.connect() as conn:
-        conn.execute(text(sql))
+        conn.execute(text(SCHEMA_SQL))
         conn.commit()
 
 def ingest():
