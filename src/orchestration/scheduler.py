@@ -1,14 +1,20 @@
-import schedule
-import time
 import logging
 from datetime import datetime, timezone
+from sqlalchemy import text
 from src.ingestion import StockFetcher, ForexFetcher, CryptoFetcher
-#from src.ingestion.stocks_api import fetch_stock_price, store_raw
 from src.warehouse.load import load_to_db
 from src.etl.transform import transform_stocks, transform_crypto, transform_forex
 from src.storage.lake_writer import write_to_lake
 from src.storage.lake_reader import read_from_lake, list_lake_files
+from src.warehouse.db import engine
 logger = logging.getLogger(__name__)
+
+def init_db():
+    with open("schema.sql", "r") as f:
+        sql = f.read()
+    with engine.connect() as conn:
+        conn.execute(text(sql))
+        conn.commit()
 
 def ingest():
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
@@ -85,10 +91,14 @@ def etl(ts):
 #print(list_lake_files("financial-data-lake/stocks/AAPL"))
 #print(read_from_lake("financial-data-lake/stocks/AAPL/20260429T171457.csv"))
 
+#Initialise database
+init_db()
 #Ingest data from API fetcher to send to data lake, return timestamp value
 ts = ingest()
 #Use this timestamp value to then extract the recently uploaded raw data from data lake, put into ETL
 etl(ts)
+
+
 # schedule.every(5).minutes.do(ingest)
 # schedule.every().hour.do(etl)
 
