@@ -122,5 +122,13 @@ def get_news():
 def health():
     return 'ok'
 
+@app.route('/debug')
+def debug():
+    return {
+        'static_folder': app.static_folder,
+        'exists': os.path.exists(app.static_folder),
+        'index_exists': os.path.exists(os.path.join(app.static_folder, 'index.html'))
+    }
+
 if __name__ == "__main__":
     app.run(debug=True, port=8000)
