@@ -13,7 +13,7 @@ DB_URI = (
 engine = create_engine(DB_URI)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DIST_DIR = os.path.join(BASE_DIR, '..', 'dist')
+DIST_DIR = os.path.join(BASE_DIR, '..', 'frontend', 'dist')
 
 app = Flask(__name__, static_folder=DIST_DIR, static_url_path='')
 #app = Flask(__name__, static_folder=os.path.join('..', 'dist'), static_url_path='')
