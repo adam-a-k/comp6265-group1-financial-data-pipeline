@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS crypto_rates (
     price_change_pct FLOAT
 );
 
-DROP TABLE IF EXISTS news;
 CREATE TABLE IF NOT EXISTS news (
     id          SERIAL PRIMARY KEY,
     timestamp   TIMESTAMPTZ NOT NULL,
