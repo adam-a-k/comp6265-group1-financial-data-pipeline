@@ -1,3 +1,5 @@
+import schedule
+import time
 import logging
 from datetime import datetime, timezone
 from sqlalchemy import text
@@ -80,19 +82,17 @@ def etl(ts):
     
 
 
-#Initialise database
-init_db()
-#Ingest data from API fetcher to send to data lake, return timestamp value
-ts = ingest()
-#Use this timestamp value to then extract the recently uploaded raw data from data lake, put into ETL
-etl(ts)
+def run_pipeline():
+    #Initialise database
+    init_db()
+    #Ingest data from API fetcher to send to data lake, return timestamp value
+    ts = ingest()
+    #Use this timestamp value to then extract the recently uploaded raw data from data lake, put into ETL
+    etl(ts)
 
+schedule.every(1).hours.do(run_pipeline)
+run_pipeline() # run immediately on startup
 
-# schedule.every(5).minutes.do(ingest)
-# schedule.every().hour.do(etl)
-
-
-# while True:
-#     pass
-#     schedule.run_pending()
-#     time.sleep(1)
+while True:
+    schedule.run_pending()
+    time.sleep(60)
