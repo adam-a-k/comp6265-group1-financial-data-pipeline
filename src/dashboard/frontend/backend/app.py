@@ -1,10 +1,16 @@
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
-from sqlalchemy import text
-from src.warehouse.db import engine
+from sqlalchemy import text, create_engine
+#from src.warehouse.db import engine
 import random
 import datetime
 import os
+
+DB_URI = (
+    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
+    f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+)
+engine = create_engine(DB_URI)
 
 app = Flask(__name__, static_folder=os.path.join('..', 'dist'), static_url_path='')
 CORS(app)
