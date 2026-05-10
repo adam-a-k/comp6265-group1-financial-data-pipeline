@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS crypto_rates (
     high            FLOAT,
     low             FLOAT,
     price           FLOAT,
+    volume          FLOAT,
     symbol          TEXT            NOT NULL,
     source          TEXT            NOT NULL,
     rolling_avg_7d  FLOAT,
