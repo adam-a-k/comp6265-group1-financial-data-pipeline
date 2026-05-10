@@ -40,8 +40,15 @@ CREATE TABLE IF NOT EXISTS crypto_rates (
 
 DROP TABLE IF EXISTS news;
 CREATE TABLE IF NOT EXISTS news (
-    timestamp TIMESTAMP,
-    symbol VARCHAR(10),
-    sentiment FLOAT
+    id          SERIAL PRIMARY KEY,
+    timestamp   TIMESTAMPTZ NOT NULL,
+    fetched_at  TIMESTAMPTZ NOT NULL,
+    symbol      TEXT        NOT NULL,
+    source      TEXT        NOT NULL,
+    title       TEXT,
+    description TEXT,
+    url         TEXT,
+    publisher   TEXT,
+    CONSTRAINT uq_news_url UNIQUE (url)
 );
 """

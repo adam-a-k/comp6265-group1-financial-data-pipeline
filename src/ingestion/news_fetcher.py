@@ -7,6 +7,7 @@ and storage layers.
 
 from datetime import datetime, timezone
 
+from .config import NEWS_API_KEY
 import pandas as pd
 import requests
 
@@ -17,7 +18,7 @@ class NewsFetcher:
     BASE_URL: str = "https://newsapi.org/v2/everything"
     SOURCE: str = "newsapi"
 
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, api_key: str = NEWS_API_KEY) -> None:
         if not api_key:
             raise ValueError("api_key must not be empty")
         self.api_key = api_key

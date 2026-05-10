@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 #: with very limited rate limits.  Set ALPHA_VANTAGE_KEY in your environment.
 load_dotenv()
 ALPHA_VANTAGE_KEY: str = os.getenv("ALPHA_VANTAGE_KEY", "demo")
-
+NEWS_API_KEY: str = os.getenv("NEWS_API_KEY")
 # ---------------------------------------------------------------------------
 # Default symbols to track
 # ---------------------------------------------------------------------------

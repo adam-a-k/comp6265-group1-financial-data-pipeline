@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
 from sqlalchemy import text
-from src.ingestion import StockFetcher, ForexFetcher, CryptoFetcher
+from src.ingestion import StockFetcher, ForexFetcher, CryptoFetcher, NewsFetcher
 from src.warehouse.load import load_to_db
 from src.etl.transform import transform_stocks, transform_crypto, transform_forex
 from src.storage.lake_writer import write_to_lake
@@ -10,26 +10,14 @@ from src.warehouse.db import engine
 from src.warehouse.schema import SCHEMA_SQL
 logger = logging.getLogger(__name__)
 
+#Send SQL script to DB in case there are no tables
 def init_db():
-    # with open("schema.sql", "r") as f:
-    #     sql = f.read()
     with engine.connect() as conn:
         conn.execute(text(SCHEMA_SQL))
         conn.commit()
 
 def ingest():
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
-    # for symbol in ["AAPL", "GOOGL", "MSFT"]:
-    #     stocks_df = StockFetcher().fetch(symbol)
-    #     write_to_lake(stocks_df, f"stocks/{symbol}/{ts}.csv")
-
-    # for from_sym, to_sym in [("USD", "EUR"), ("USD", "GBP")]:
-    #     forex_df = ForexFetcher().fetch(from_symbol=from_sym, to_symbol=to_sym)
-    #     write_to_lake(forex_df, f"forex/{from_sym}{to_sym}/{ts}.csv")
-
-    # for coin in ["bitcoin", "ethereum"]:
-    #     crypto_df = CryptoFetcher().fetch(coin, vs_currency="usd", days=30)
-    #     write_to_lake(crypto_df, f"crypto/{coin}/{ts}.csv")
 
     #Loop through different types of each financial data, fetch data then write to data lake
     #Try/Excepts added to avoid error on API rate limits
@@ -54,7 +42,14 @@ def ingest():
         except Exception as e:
             logger.warning(f"Skipping crypto/{coin}: {e}")
 
-    #return stocks_df, forex_df, crypto_df
+    for query in ["AAPL", "GOOGL", "MSFT", "bitcoin", "ethereum", "USD EUR"]:
+        try:
+            news_df = NewsFetcher().fetch(query)
+            #Load directly to database as no ETL needed for news
+            load_to_db(news_df, table="news")
+        except Exception as e:
+            logger.warning(f"Skipping news/{query}: {e}")
+
     return ts
 
 def etl(ts):
@@ -82,15 +77,8 @@ def etl(ts):
         except Exception as e:
             logger.warning(f"Skipping crypto/{coin}: {e}")
 
+    
 
-
-#stocks_df, forex_df, crypto_df = ingest()
-#ingest()
-#print(stocks_df)
-#etl(stocks_df)
-
-#print(list_lake_files("financial-data-lake/stocks/AAPL"))
-#print(read_from_lake("financial-data-lake/stocks/AAPL/20260429T171457.csv"))
 
 #Initialise database
 init_db()
