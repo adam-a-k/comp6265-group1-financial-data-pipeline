@@ -97,26 +97,36 @@ def get_crypto():
 # ── NEWS ──
 @app.route("/api/news")
 def get_news():
-    headlines = [
-        {"title": "Fed holds rates steady amid inflation concerns", "source": "Reuters", "sentiment": "neutral", "category": "macro"},
-        {"title": "NVDA surges 6% on strong AI chip demand forecast", "source": "Bloomberg", "sentiment": "positive", "category": "tech"},
-        {"title": "EUR/USD falls as ECB signals rate cut timeline", "source": "FT", "sentiment": "negative", "category": "forex"},
-        {"title": "Apple announces record buyback programme", "source": "CNBC", "sentiment": "positive", "category": "stocks"},
-        {"title": "Oil prices dip on weaker demand outlook from China", "source": "Reuters", "sentiment": "negative", "category": "commodities"},
-        {"title": "US jobs data beats expectations, market rallies", "source": "WSJ", "sentiment": "positive", "category": "macro"},
-        {"title": "Tesla faces recall on autopilot software update", "source": "Bloomberg", "sentiment": "negative", "category": "stocks"},
-        {"title": "Bank of Japan hints at end of negative rate policy", "source": "Nikkei", "sentiment": "neutral", "category": "forex"},
-    ]
-    now = datetime.datetime.utcnow()
-    result = []
-    for i, h in enumerate(headlines):
-        result.append({
-            **h,
-            "id": i + 1,
-            "timestamp": (now - datetime.timedelta(minutes=i * 18)).strftime("%H:%M"),
-            "ago": f"{i * 18}m ago" if i > 0 else "Just now"
-        })
-    return jsonify(result)
+    # headlines = [
+    #     {"title": "Fed holds rates steady amid inflation concerns", "source": "Reuters", "sentiment": "neutral", "category": "macro"},
+    #     {"title": "NVDA surges 6% on strong AI chip demand forecast", "source": "Bloomberg", "sentiment": "positive", "category": "tech"},
+    #     {"title": "EUR/USD falls as ECB signals rate cut timeline", "source": "FT", "sentiment": "negative", "category": "forex"},
+    #     {"title": "Apple announces record buyback programme", "source": "CNBC", "sentiment": "positive", "category": "stocks"},
+    #     {"title": "Oil prices dip on weaker demand outlook from China", "source": "Reuters", "sentiment": "negative", "category": "commodities"},
+    #     {"title": "US jobs data beats expectations, market rallies", "source": "WSJ", "sentiment": "positive", "category": "macro"},
+    #     {"title": "Tesla faces recall on autopilot software update", "source": "Bloomberg", "sentiment": "negative", "category": "stocks"},
+    #     {"title": "Bank of Japan hints at end of negative rate policy", "source": "Nikkei", "sentiment": "neutral", "category": "forex"},
+    # ]
+    # now = datetime.datetime.utcnow()
+    # result = []
+    # for i, h in enumerate(headlines):
+    #     result.append({
+    #         **h,
+    #         "id": i + 1,
+    #         "timestamp": (now - datetime.timedelta(minutes=i * 18)).strftime("%H:%M"),
+    #         "ago": f"{i * 18}m ago" if i > 0 else "Just now"
+    #     })
+    # return jsonify(result)
+
+    with engine.connect() as conn:
+        result = conn.execute(text("SELECT * FROM news ORDER BY timestamp DESC LIMIT 20"))
+        rows = [dict(r._mapping) for r in result]
+    for row in rows:
+        if row.get("timestamp"):
+            row["timestamp"] = row["timestamp"].isoformat()
+        if row.get("fetched_at"):
+            row["fetched_at"] = row["fetched_at"].isoformat()
+    return jsonify(rows)
 
 @app.route('/health')
 def health():
