@@ -1,21 +1,18 @@
 import { useState, useCallback } from "react"
 import { fetchStocks, fetchForex, fetchCrypto, fetchNews } from "./services/api"
-import { StockPanel } from "./components/StockPanel"
-import { ForexPanel } from "./components/ForexPanel"
+import StockPanel from "./components/StockPanel"
+import ForexPanel from "./components/ForexPanel"
 import { CryptoPanel } from "./components/CryptoPanel"
-import { NewsPanel } from "./components/NewsPanel"
+import NewsPanel from "./components/NewsPanel"
 import { usePolling } from "./hooks/usePolling"
 
 export default function App() {
-  const [lastRefresh, setLastRefresh] = useState(new Date())
-
   const stocks = usePolling(fetchStocks, 30000)
   const forex = usePolling(fetchForex, 30000)
   const crypto = usePolling(fetchCrypto, 30000)
   const news = usePolling(fetchNews, 60000)
 
   const handleRefresh = useCallback(() => {
-    setLastRefresh(new Date())
     window.location.reload()
   }, [])
 
