@@ -19,7 +19,7 @@ export default function StockPanel() {
       <div className="stock-grid">
         {stocks.map(s => {
           const positive = s.change >= 0
-          const chartData = s.history.map((v, i) => ({ i, v }))
+          const chartData = (s.history ?? []).map((v, i) => ({ i, v }))
           return (
             <div key={s.symbol} className={`stock-card ${positive ? 'up' : 'down'}`}>
               <div className="stock-top">

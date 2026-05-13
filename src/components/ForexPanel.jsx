@@ -1,6 +1,6 @@
 import { usePolling } from '../hooks/usePolling'
 import { fetchForex } from '../services/api'
-import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts'
+import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
 export default function ForexPanel() {
   const { data: pairs, loading, error, lastUpdated } = usePolling(fetchForex, 30000)
@@ -18,7 +18,7 @@ export default function ForexPanel() {
       <div className="forex-list">
         {pairs.map(p => {
           const positive = p.change_pct >= 0
-          const chartData = p.history.map((v, i) => ({ i, v }))
+          const chartData = (p.history ?? []).map((v, i) => ({ i, v }))
           return (
             <div key={p.pair} className="forex-row">
               <div className="forex-left">

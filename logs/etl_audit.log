@@ -1,0 +1,3 @@
+2026-05-08 21:23:50 | INFO | stage=transform_stocks | source=stocks | user=pipeline_scheduler | usage=etl_transform | input_rows=100 | output_rows=100 | nulls_dropped=0
+2026-05-09 00:28:11 | INFO | stage=transform_crypto | source=crypto | user=pipeline_scheduler | usage=etl_transform | input_rows=180 | output_rows=180 | nulls_dropped=0
+2026-05-09 00:28:11 | INFO | stage=transform_crypto | source=crypto | user=pipeline_scheduler | usage=etl_transform | input_rows=180 | output_rows=180 | nulls_dropped=0

@@ -21,7 +21,10 @@ export default function NewsPanel() {
         {news.map(item => (
           <div key={item.id} className="news-item">
             <div className="news-meta">
-              <span className="news-sentiment" style={{ color: sentimentColor[item.sentiment] }}>
+              <span
+                className="news-sentiment"
+                style={{ color: sentimentColor[item.sentiment] }}
+              >
                 {sentimentLabel[item.sentiment]}
               </span>
               <span className="news-source">{item.source}</span>
