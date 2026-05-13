@@ -1,32 +1,44 @@
-import StockPanel from './components/StockPanel'
-import ForexPanel from './components/ForexPanel'
-import NewsPanel  from './components/NewsPanel'
-import './App.css'
+import { useState, useCallback } from "react"
+import { fetchStocks, fetchForex, fetchCrypto, fetchNews } from "./services/api"
+import { StockPanel } from "./components/StockPanel"
+import { ForexPanel } from "./components/ForexPanel"
+import { CryptoPanel } from "./components/CryptoPanel"
+import { NewsPanel } from "./components/NewsPanel"
+import { usePolling } from "./hooks/usePolling"
 
 export default function App() {
-  const now = new Date().toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  })
+  const [lastRefresh, setLastRefresh] = useState(new Date())
+
+  const stocks = usePolling(fetchStocks, 30000)
+  const forex = usePolling(fetchForex, 30000)
+  const crypto = usePolling(fetchCrypto, 30000)
+  const news = usePolling(fetchNews, 60000)
+
+  const handleRefresh = useCallback(() => {
+    setLastRefresh(new Date())
+    window.location.reload()
+  }, [])
 
   return (
     <div className="app">
-      <header className="app-header">
+      <header className="header">
         <div className="header-left">
-          <div className="logo">◈ FINPULSE</div>
-          <span className="header-date">{now}</span>
+          <span className="logo">? FINPULSE</span>
+          <span className="date">{new Date().toLocaleDateString("en-US", { weekday:"long", year:"numeric", month:"long", day:"numeric" })}</span>
         </div>
         <div className="header-right">
-          <span className="live-badge">● LIVE</span>
+          <button onClick={handleRefresh} className="refresh-btn">? Refresh</button>
+          <span className="live-indicator">? LIVE</span>
         </div>
       </header>
-
-      <main className="dashboard">
-        <div className="col-left">
-          <StockPanel />
-          <ForexPanel />
+      <main className="main">
+        <div className="left-col">
+          <StockPanel data={stocks} />
+          <ForexPanel data={forex} />
+          <CryptoPanel data={crypto} />
         </div>
-        <div className="col-right">
-          <NewsPanel />
+        <div className="right-col">
+          <NewsPanel data={news} />
         </div>
       </main>
     </div>
