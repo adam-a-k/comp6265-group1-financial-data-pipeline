@@ -24,26 +24,6 @@ class NewsFetcher:
         self.api_key = api_key
 
     def fetch(self, query: str, page_size: int = 20) -> pd.DataFrame:
-        """Fetch news articles matching *query*.
-
-        Parameters
-        ----------
-        query:
-            Search query string, e.g. ``"AAPL"`` or ``"bitcoin"``.
-        page_size:
-            Number of articles to return (default 20, max 100).
-
-        Returns
-        -------
-        pd.DataFrame
-            Columns: ``[source, symbol, timestamp, title, description, url, publisher, fetched_at]``
-            ``source`` is always ``"newsapi"``; ``symbol`` is the query string.
-
-        Raises
-        ------
-        RuntimeError
-            On request timeout, HTTP error, or any other network failure.
-        """
         try:
             params = {
                 "q": query,

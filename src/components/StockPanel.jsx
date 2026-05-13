@@ -8,6 +8,7 @@ export default function StockPanel() {
 
   if (loading) return <div className="panel-loading">Loading stocks…</div>
   if (error)   return <div className="panel-error">⚠ {error}</div>
+  if (!stocks || stocks.length === 0) return <div className="panel-loading">Waiting for data...</div>
 
   return (
     <section className="panel">

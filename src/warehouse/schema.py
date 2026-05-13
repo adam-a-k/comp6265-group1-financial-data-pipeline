@@ -1,5 +1,4 @@
 SCHEMA_SQL = """
-
 CREATE TABLE IF NOT EXISTS stock_prices (
     timestamp       TIMESTAMPTZ     NOT NULL,
     open            FLOAT,
@@ -12,7 +11,6 @@ CREATE TABLE IF NOT EXISTS stock_prices (
     rolling_avg_7d  FLOAT,
     price_change_pct FLOAT
 );
-
 CREATE TABLE IF NOT EXISTS forex_rates (
     timestamp       TIMESTAMPTZ     NOT NULL,
     open            FLOAT,
@@ -25,7 +23,6 @@ CREATE TABLE IF NOT EXISTS forex_rates (
     rolling_avg_7d  FLOAT,
     price_change_pct FLOAT
 );
-
 CREATE TABLE IF NOT EXISTS crypto_rates (
     timestamp       TIMESTAMPTZ     NOT NULL,
     open            FLOAT,
@@ -38,7 +35,6 @@ CREATE TABLE IF NOT EXISTS crypto_rates (
     rolling_avg_7d  FLOAT,
     price_change_pct FLOAT
 );
-
 CREATE TABLE IF NOT EXISTS news (
     id          SERIAL PRIMARY KEY,
     timestamp   TIMESTAMPTZ NOT NULL,

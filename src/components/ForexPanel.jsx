@@ -7,6 +7,7 @@ export default function ForexPanel() {
 
   if (loading) return <div className="panel-loading">Loading forex…</div>
   if (error)   return <div className="panel-error">⚠ {error}</div>
+  if (!pairs || pairs.length === 0) return <div className="panel-loading">Waiting for data...</div>
 
   return (
     <section className="panel">
