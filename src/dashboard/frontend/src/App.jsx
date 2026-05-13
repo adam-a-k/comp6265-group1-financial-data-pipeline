@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react"
+import "./App.css"
+import { useCallback } from "react"
 import { fetchStocks, fetchForex, fetchCrypto, fetchNews } from "./services/api"
 import StockPanel from "./components/StockPanel"
 import ForexPanel from "./components/ForexPanel"
