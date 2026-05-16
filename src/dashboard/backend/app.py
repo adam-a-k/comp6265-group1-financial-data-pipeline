@@ -140,5 +140,48 @@ def debug():
         'index_exists': os.path.exists(os.path.join(app.static_folder, 'index.html'))
     }
 
+with engine.connect() as conn:
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id          SERIAL PRIMARY KEY,
+            action      VARCHAR(64)  NOT NULL,
+            resource    VARCHAR(128) NOT NULL,
+            resource_id VARCHAR(128),
+            user_id     VARCHAR(128),
+            ip_address  VARCHAR(64),
+            detail      TEXT,
+            timestamp   TIMESTAMP DEFAULT NOW()
+        )
+    """))
+    conn.commit()
+
+def log_action(action, resource, resource_id=None, user_id=None, detail=None):
+    from flask import request as freq
+    import json
+    with engine.connect() as conn:
+        conn.execute(text("""
+            INSERT INTO audit_logs (action, resource, resource_id, user_id, ip_address, detail)
+            VALUES (:action, :resource, :resource_id, :user_id, :ip, :detail)
+        """), {
+            "action": action, "resource": resource,
+            "resource_id": str(resource_id) if resource_id else None,
+            "user_id": user_id,
+            "ip": freq.remote_addr,
+            "detail": json.dumps(detail) if detail else None
+        })
+        conn.commit()
+
+@app.route("/api/audit-logs")
+def get_audit_logs():
+    with engine.connect() as conn:
+        result = conn.execute(text(
+            "SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT 200"
+        ))
+        rows = [dict(r._mapping) for r in result]
+    for row in rows:
+        row["timestamp"] = row["timestamp"].isoformat()
+    return jsonify(rows)
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=8000)
