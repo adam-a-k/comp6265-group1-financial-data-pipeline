@@ -1,34 +1,71 @@
-import StockPanel from './components/StockPanel'
-import ForexPanel from './components/ForexPanel'
-import NewsPanel  from './components/NewsPanel'
-import './App.css'
+import "./App.css"
+import { useCallback } from "react"
+import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom"
+import { fetchStocks, fetchForex, fetchCrypto, fetchNews } from "./services/api"
+import StockPanel from "./components/StockPanel"
+import ForexPanel from "./components/ForexPanel"
+import { CryptoPanel } from "./components/CryptoPanel"
+import NewsPanel from "./components/NewsPanel"
+import AuditLogPanel from "./components/AuditLogPanel"
+import SourceRegistryPanel from "./components/SourceRegistryPanel"
+import { usePolling } from "./hooks/usePolling"
 
-export default function App() {
-  const now = new Date().toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  })
+function Dashboard({ stocks, forex, crypto, news }) {
+  return (
+    <main className="main">
+      <div className="left-col">
+        <StockPanel data={stocks} />
+        <ForexPanel data={forex} />
+        <CryptoPanel data={crypto} />
+      </div>
+      <div className="right-col">
+        <NewsPanel data={news} />
+      </div>
+    </main>
+  )
+}
+
+export default function App({ keycloak }) {
+  const isAdmin = keycloak.realmAccess?.roles?.includes('admin')
+
+  const stocks = usePolling(fetchStocks, 30000)
+  const forex  = usePolling(fetchForex, 30000)
+  const crypto = usePolling(fetchCrypto, 30000)
+  const news   = usePolling(fetchNews, 60000)
+
+  const handleRefresh = useCallback(() => window.location.reload(), [])
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <div className="header-left">
-          <div className="logo">◈ FINPULSE</div>
-          <span className="header-date">{now}</span>
-        </div>
-        <div className="header-right">
-          <span className="live-badge">● LIVE</span>
-        </div>
-      </header>
-
-      <main className="dashboard">
-        <div className="col-left">
-          <StockPanel />
-          <ForexPanel />
-        </div>
-        <div className="col-right">
-          <NewsPanel />
-        </div>
-      </main>
-    </div>
+    <BrowserRouter>
+      <div className="app">
+        <header className="header">
+          <div className="header-left">
+            <span className="logo">⚡ FINPULSE</span>
+            <nav className="nav">
+              <NavLink to="/" end className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Dashboard</NavLink>
+              <NavLink to="/registry" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Sources</NavLink>
+              {isAdmin && (
+                <NavLink to="/audit" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Audit Log</NavLink>
+              )}
+            </nav>
+          </div>
+          <div className="header-right">
+            <button onClick={handleRefresh} className="refresh-btn">↻ Refresh</button>
+            <span className="live-indicator">● LIVE</span>
+            <span>{keycloak.tokenParsed?.preferred_username}</span>
+            <button onClick={() => keycloak.logout()} className="refresh-btn">Logout</button>
+          </div>
+        </header>
+        <Routes>
+          <Route path="/" element={<Dashboard stocks={stocks} forex={forex} crypto={crypto} news={news} />} />
+          <Route path="/registry" element={<SourceRegistryPanel />} />
+          <Route path="/audit" element={
+            isAdmin
+              ? <AuditLogPanel />
+              : <p style={{ padding: '2rem' }}>Access denied — admin only.</p>
+          } />
+        </Routes>
+      </div>
+    </BrowserRouter>
   )
 }
