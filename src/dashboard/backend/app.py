@@ -38,17 +38,25 @@ def log_action(action, resource, resource_id=None, user_id=None, detail=None):
 
 def get_user_from_token():
     auth = request.headers.get('Authorization', '')
-    print("AUTH HEADER:", auth[:50] if auth else "MISSING")
     if not auth.startswith('Bearer '):
         return None
     token = auth.split(' ')[1]
     try:
-        decoded = jwt.decode(token, options={"verify_signature": False}, algorithms=["RS256"])
-        print("DECODED:", decoded.get('preferred_username'))
+        decoded = jwt.decode(
+            token,
+            key='',
+            algorithms=["RS256"],
+            options={
+                "verify_signature": False,
+                "verify_aud": False,
+                "verify_exp": False,
+            }
+        )
         return decoded.get('preferred_username')
     except Exception as e:
         print("JWT ERROR:", e)
         return None
+    
 # ── Serve React frontend ──
 @app.route('/')
 def serve():
