@@ -1,4 +1,8 @@
 {
+  "packages": {
+    "node": "22",
+    "python": "3.13"
+  },
   "steps": {
     "install-frontend": {
       "commands": [
