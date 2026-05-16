@@ -5,7 +5,7 @@ from sqlalchemy import text, create_engine
 import random
 import datetime
 import os
-import jwt
+from jose import jwt
 
 DB_URI = (
     f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
