@@ -56,7 +56,22 @@ def get_user_from_token():
     except Exception as e:
         print("JWT ERROR:", e)
         return None
-    
+
+def get_user_roles():
+    auth = request.headers.get('Authorization', '')
+    if not auth.startswith('Bearer '):
+        return []
+    token = auth.split(' ')[1]
+    try:
+        decoded = jwt.decode(
+            token, key='', algorithms=["RS256"],
+            options={"verify_signature": False, "verify_aud": False, "verify_exp": False}
+        )
+        return decoded.get('realm_access', {}).get('roles', [])
+    except Exception:
+        return []
+
+
 # ── Serve React frontend ──
 @app.route('/')
 def serve():
@@ -165,10 +180,14 @@ def get_news():
 
 @app.route('/health')
 def health():
+    if 'admin' not in get_user_roles():
+        return jsonify({"error": "Forbidden"}), 403
     return 'ok'
 
 @app.route('/debug')
 def debug():
+    if 'admin' not in get_user_roles():
+        return jsonify({"error": "Forbidden"}), 403
     return {
         'static_folder': app.static_folder,
         'exists': os.path.exists(app.static_folder),
@@ -190,8 +209,90 @@ with engine.connect() as conn:
     """))
     conn.commit()
 
+with engine.connect() as conn:
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS source_registry (
+            id          SERIAL PRIMARY KEY,
+            name        VARCHAR(256) NOT NULL,
+            source_type VARCHAR(64)  NOT NULL DEFAULT 'REST_API',
+            url         TEXT,
+            owner       VARCHAR(128),
+            status      VARCHAR(32)  NOT NULL DEFAULT 'active',
+            registered_at TIMESTAMP  DEFAULT NOW()
+        )
+    """))
+    conn.commit()
+
+
+@app.route("/api/registry/", methods=["GET"])
+def registry_list():
+    log_action('READ', 'source_registry', user_id=get_user_from_token())
+    with engine.connect() as conn:
+        rows = conn.execute(text(
+            "SELECT * FROM source_registry ORDER BY registered_at DESC"
+        ))
+        result = [dict(r._mapping) for r in rows]
+    for row in result:
+        if row.get("registered_at"):
+            row["registered_at"] = row["registered_at"].isoformat()
+    return jsonify(result)
+
+@app.route("/api/registry/", methods=["POST"])
+def registry_create():
+    roles = get_user_roles()
+    if not any(r in roles for r in ('analyst', 'admin')):
+        return jsonify({"error": "Forbidden"}), 403
+    data = request.get_json()
+    user = get_user_from_token()
+    with engine.connect() as conn:
+        row = conn.execute(text("""
+            INSERT INTO source_registry (name, source_type, url, owner, status)
+            VALUES (:name, :source_type, :url, :owner, :status)
+            RETURNING *
+        """), {
+            "name":        data.get("name"),
+            "source_type": data.get("source_type", "REST_API"),
+            "url":         data.get("url"),
+            "owner":       data.get("owner"),
+            "status":      data.get("status", "active"),
+        }).mappings().one()
+        conn.commit()
+    log_action('CREATE', 'source_registry', resource_id=row["id"], user_id=user)
+    result = dict(row)
+    result["registered_at"] = result["registered_at"].isoformat()
+    return jsonify(result), 201
+
+@app.route("/api/registry/<int:source_id>", methods=["DELETE"])
+def registry_delete(source_id):
+    if 'admin' not in get_user_roles():
+        return jsonify({"error": "Forbidden"}), 403
+    user = get_user_from_token()
+    with engine.connect() as conn:
+        conn.execute(text(
+            "DELETE FROM source_registry WHERE id = :id"
+        ), {"id": source_id})
+        conn.commit()
+    log_action('DELETE', 'source_registry', resource_id=source_id, user_id=user)
+    return "", 204
+
+@app.route("/api/registry/<int:source_id>", methods=["PATCH"])
+def registry_patch(source_id):
+    if 'admin' not in get_user_roles():
+        return jsonify({"error": "Forbidden"}), 403
+    data = request.get_json()
+    user = get_user_from_token()
+    with engine.connect() as conn:
+        conn.execute(text("""
+            UPDATE source_registry SET status = :status WHERE id = :id
+        """), {"status": data.get("status"), "id": source_id})
+        conn.commit()
+    log_action('UPDATE', 'source_registry', resource_id=source_id, user_id=user, detail=data)
+    return "", 204
+
 @app.route("/api/audit-logs")
 def get_audit_logs():
+    if 'admin' not in get_user_roles():
+        return jsonify({"error": "Forbidden"}), 403
     with engine.connect() as conn:
         result = conn.execute(text(
             "SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT 200"

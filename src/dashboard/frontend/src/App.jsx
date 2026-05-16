@@ -9,6 +9,7 @@ import NewsPanel from "./components/NewsPanel"
 import AuditLogPanel from "./components/AuditLogPanel"
 import SourceRegistryPanel from "./components/SourceRegistryPanel"
 import { usePolling } from "./hooks/usePolling"
+import keycloak from "./keycloak"
 
 function Dashboard({ stocks, forex, crypto, news }) {
   return (
@@ -33,6 +34,10 @@ export default function App() {
 
   const handleRefresh = useCallback(() => window.location.reload(), [])
 
+  const roles = keycloak.tokenParsed?.realm_access?.roles ?? []
+  const isAnalystOrAdmin = roles.includes("analyst") || roles.includes("admin")
+  const isAdmin = roles.includes("admin")
+
   return (
     <BrowserRouter>
       <div className="app">
@@ -40,9 +45,13 @@ export default function App() {
           <div className="header-left">
             <span className="logo">⚡ FINPULSE</span>
             <nav className="nav">
-              <NavLink to="/"         end className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Dashboard</NavLink>
-              <NavLink to="/registry"     className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Sources</NavLink>
-              <NavLink to="/audit"        className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Audit Log</NavLink>
+              <NavLink to="/" end className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Dashboard</NavLink>
+              {isAnalystOrAdmin && (
+                <NavLink to="/registry" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Sources</NavLink>
+              )}
+              {isAdmin && (
+                <NavLink to="/audit" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Audit Log</NavLink>
+              )}
             </nav>
           </div>
           <div className="header-right">
@@ -52,7 +61,7 @@ export default function App() {
         </header>
         <Routes>
           <Route path="/"         element={<Dashboard stocks={stocks} forex={forex} crypto={crypto} news={news} />} />
-          <Route path="/registry" element={<SourceRegistryPanel />} />
+          <Route path="/registry" element={<SourceRegistryPanel canRegister={isAnalystOrAdmin} />} />
           <Route path="/audit"    element={<AuditLogPanel />} />
         </Routes>
       </div>
