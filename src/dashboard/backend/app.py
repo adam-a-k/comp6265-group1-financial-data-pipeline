@@ -20,6 +20,34 @@ app = Flask(__name__, static_folder=DIST_DIR, static_url_path='')
 #app = Flask(__name__, static_folder=os.path.join('..', 'dist'), static_url_path='')
 CORS(app)
 
+def log_action(action, resource, resource_id=None, user_id=None, detail=None):
+    from flask import request as freq
+    import json
+    with engine.connect() as conn:
+        conn.execute(text("""
+            INSERT INTO audit_logs (action, resource, resource_id, user_id, ip_address, detail)
+            VALUES (:action, :resource, :resource_id, :user_id, :ip, :detail)
+        """), {
+            "action": action, "resource": resource,
+            "resource_id": str(resource_id) if resource_id else None,
+            "user_id": user_id,
+            "ip": freq.remote_addr,
+            "detail": json.dumps(detail) if detail else None
+        })
+        conn.commit()
+
+def get_user_from_token():
+    auth = request.headers.get('Authorization', '')
+    if not auth.startswith('Bearer '):
+        return None
+    token = auth.split(' ')[1]
+    try:
+        # decode without verification just to read claims
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        return decoded.get('preferred_username')
+    except:
+        return None
+
 # ── Serve React frontend ──
 @app.route('/')
 def serve():
@@ -43,6 +71,7 @@ def get_stocks():
     #         "history": [round(base * (1 + random.uniform(-0.05, 0.05)), 2) for _ in range(30)]
     #     })
     # return jsonify(stocks)
+    log_action('READ', 'stock_prices', user_id=get_user_from_token())
     with engine.connect() as conn:
         result = conn.execute(text("SELECT * FROM stock_prices ORDER BY timestamp DESC"))
         rows = [dict(r._mapping) for r in result]
@@ -72,6 +101,7 @@ def get_forex():
     #         "history": [round(p["base"] + random.uniform(-0.02, 0.02), 4) for _ in range(30)]
     #     })
     # return jsonify(result)
+    log_action('READ', 'forex_rates', user_id=get_user_from_token())
     with engine.connect() as conn:
         result = conn.execute(text("SELECT * FROM forex_rates ORDER BY timestamp DESC"))
         rows = [dict(r._mapping) for r in result]
@@ -82,6 +112,7 @@ def get_forex():
 #Crypto
 @app.route("/api/crypto")
 def get_crypto():
+    log_action('READ', 'crypto_rates', user_id=get_user_from_token())
     with engine.connect() as conn:
         result = conn.execute(text("SELECT * FROM crypto_rates ORDER BY timestamp DESC"))
         rows = [dict(r._mapping) for r in result]
@@ -112,7 +143,7 @@ def get_news():
     #         "ago": f"{i * 18}m ago" if i > 0 else "Just now"
     #     })
     # return jsonify(result)
-
+    log_action('READ', 'news', user_id=get_user_from_token())
     with engine.connect() as conn:
         result = conn.execute(text("SELECT * FROM news ORDER BY timestamp DESC LIMIT 20"))
         rows = [dict(r._mapping) for r in result]
@@ -170,33 +201,6 @@ def static_files(path):
 
 
 
-def log_action(action, resource, resource_id=None, user_id=None, detail=None):
-    from flask import request as freq
-    import json
-    with engine.connect() as conn:
-        conn.execute(text("""
-            INSERT INTO audit_logs (action, resource, resource_id, user_id, ip_address, detail)
-            VALUES (:action, :resource, :resource_id, :user_id, :ip, :detail)
-        """), {
-            "action": action, "resource": resource,
-            "resource_id": str(resource_id) if resource_id else None,
-            "user_id": user_id,
-            "ip": freq.remote_addr,
-            "detail": json.dumps(detail) if detail else None
-        })
-        conn.commit()
-
-def get_user_from_token():
-    auth = request.headers.get('Authorization', '')
-    if not auth.startswith('Bearer '):
-        return None
-    token = auth.split(' ')[1]
-    try:
-        # decode without verification just to read claims
-        decoded = jwt.decode(token, options={"verify_signature": False})
-        return decoded.get('preferred_username')
-    except:
-        return None
 
 
 if __name__ == "__main__":
