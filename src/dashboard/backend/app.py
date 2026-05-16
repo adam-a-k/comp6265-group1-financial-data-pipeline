@@ -242,6 +242,7 @@ def registry_create():
     roles = get_user_roles()
     if not any(r in roles for r in ('analyst', 'admin')):
         return jsonify({"error": "Forbidden"}), 403
+    log_action('CREATE', 'source_registry', user_id=get_user_from_token())
     data = request.get_json()
     user = get_user_from_token()
     with engine.connect() as conn:
@@ -266,6 +267,7 @@ def registry_create():
 def registry_delete(source_id):
     if 'admin' not in get_user_roles():
         return jsonify({"error": "Forbidden"}), 403
+    log_action('DELETE', 'source_registry', user_id=get_user_from_token())
     user = get_user_from_token()
     with engine.connect() as conn:
         conn.execute(text(
@@ -279,6 +281,7 @@ def registry_delete(source_id):
 def registry_patch(source_id):
     if 'admin' not in get_user_roles():
         return jsonify({"error": "Forbidden"}), 403
+    log_action('UPDATE', 'source_registry', user_id=get_user_from_token())
     data = request.get_json()
     user = get_user_from_token()
     with engine.connect() as conn:
