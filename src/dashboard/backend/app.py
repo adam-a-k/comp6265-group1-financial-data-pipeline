@@ -24,12 +24,6 @@ CORS(app)
 def serve():
     return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/<path:path>')
-def static_files(path):
-    if os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    return send_from_directory(app.static_folder, 'index.html')
-
 # ── STOCKS ──
 @app.route("/api/stocks")
 def get_stocks():
@@ -181,6 +175,13 @@ def get_audit_logs():
     for row in rows:
         row["timestamp"] = row["timestamp"].isoformat()
     return jsonify(rows)
+
+
+@app.route('/<path:path>')
+def static_files(path):
+    if os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    return send_from_directory(app.static_folder, 'index.html')
 
 
 if __name__ == "__main__":

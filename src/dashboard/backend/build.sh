@@ -1,2 +1,2 @@
-cd .. && npm install && npm run build
-python app.py
+#!/bin/bash
+cd ../frontend && npm install && npm run build
