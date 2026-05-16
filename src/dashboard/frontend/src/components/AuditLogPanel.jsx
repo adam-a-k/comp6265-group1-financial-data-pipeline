@@ -1,5 +1,5 @@
-// src/dashboard/frontend/src/components/AuditLogPanel.jsx
 import { useEffect, useState } from "react"
+import keycloak from "../keycloak"
 
 const ACTION_COLOURS = {
   CREATE: "#4ade80",
@@ -8,17 +8,23 @@ const ACTION_COLOURS = {
 }
 
 export default function AuditLogPanel() {
-  const [logs, setLogs]     = useState([])
+  const [logs, setLogs]       = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState(null)
-  const [filter, setFilter] = useState("")
+  const [error, setError]     = useState(null)
+  const [filter, setFilter]   = useState("")
 
   const load = () => {
     setLoading(true)
-    fetch("/api/audit-logs")
+    fetch("/api/audit-logs", {
+      headers: { "Authorization": `Bearer ${keycloak.token}` }
+    })
       .then(r => r.json())
-      .then(data => { setLogs(data); setLoading(false) })
-      .catch(e  => { setError(e.message); setLoading(false) })
+      .then(data => {
+        if (!Array.isArray(data)) { setError(JSON.stringify(data)); setLoading(false); return }
+        setLogs(data)
+        setLoading(false)
+      })
+      .catch(e => { setError(e.message); setLoading(false) })
   }
 
   useEffect(() => { load() }, [])
