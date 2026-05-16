@@ -229,6 +229,9 @@ with engine.connect() as conn:
 
 @app.route("/api/registry/", methods=["GET"])
 def registry_list():
+    roles = get_user_roles()
+    if not any(r in roles for r in ('analyst', 'admin')):
+        return jsonify({"error": "Forbidden"}), 403
     log_action('READ', 'source_registry', user_id=get_user_from_token())
     with engine.connect() as conn:
         rows = conn.execute(text(
@@ -242,8 +245,7 @@ def registry_list():
 
 @app.route("/api/registry/", methods=["POST"])
 def registry_create():
-    roles = get_user_roles()
-    if not any(r in roles for r in ('analyst', 'admin')):
+    if 'admin' not in get_user_roles():
         return jsonify({"error": "Forbidden"}), 403
     log_action('CREATE', 'source_registry', user_id=get_user_from_token())
     data = request.get_json()
