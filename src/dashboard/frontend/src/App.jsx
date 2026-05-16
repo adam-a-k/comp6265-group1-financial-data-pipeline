@@ -57,6 +57,7 @@ export default function App() {
           <div className="header-right">
             <button onClick={handleRefresh} className="refresh-btn">↻ Refresh</button>
             <span className="live-indicator">● LIVE</span>
+            <button onClick={() => keycloak.logout()} className="refresh-btn">Logout</button>
           </div>
         </header>
         <Routes>
