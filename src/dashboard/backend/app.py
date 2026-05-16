@@ -1,10 +1,11 @@
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 from sqlalchemy import text, create_engine
 #from src.warehouse.db import engine
 import random
 import datetime
 import os
+import jwt
 
 DB_URI = (
     f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
@@ -149,22 +150,6 @@ with engine.connect() as conn:
     """))
     conn.commit()
 
-def log_action(action, resource, resource_id=None, user_id=None, detail=None):
-    from flask import request as freq
-    import json
-    with engine.connect() as conn:
-        conn.execute(text("""
-            INSERT INTO audit_logs (action, resource, resource_id, user_id, ip_address, detail)
-            VALUES (:action, :resource, :resource_id, :user_id, :ip, :detail)
-        """), {
-            "action": action, "resource": resource,
-            "resource_id": str(resource_id) if resource_id else None,
-            "user_id": user_id,
-            "ip": freq.remote_addr,
-            "detail": json.dumps(detail) if detail else None
-        })
-        conn.commit()
-
 @app.route("/api/audit-logs")
 def get_audit_logs():
     with engine.connect() as conn:
@@ -182,6 +167,36 @@ def static_files(path):
     if os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
     return send_from_directory(app.static_folder, 'index.html')
+
+
+
+def log_action(action, resource, resource_id=None, user_id=None, detail=None):
+    from flask import request as freq
+    import json
+    with engine.connect() as conn:
+        conn.execute(text("""
+            INSERT INTO audit_logs (action, resource, resource_id, user_id, ip_address, detail)
+            VALUES (:action, :resource, :resource_id, :user_id, :ip, :detail)
+        """), {
+            "action": action, "resource": resource,
+            "resource_id": str(resource_id) if resource_id else None,
+            "user_id": user_id,
+            "ip": freq.remote_addr,
+            "detail": json.dumps(detail) if detail else None
+        })
+        conn.commit()
+
+def get_user_from_token():
+    auth = request.headers.get('Authorization', '')
+    if not auth.startswith('Bearer '):
+        return None
+    token = auth.split(' ')[1]
+    try:
+        # decode without verification just to read claims
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        return decoded.get('preferred_username')
+    except:
+        return None
 
 
 if __name__ == "__main__":
