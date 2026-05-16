@@ -67,8 +67,11 @@ def get_user_roles():
             token, key='', algorithms=["RS256"],
             options={"verify_signature": False, "verify_aud": False, "verify_exp": False}
         )
-        return decoded.get('realm_access', {}).get('roles', [])
-    except Exception:
+        roles = decoded.get('realm_access', {}).get('roles', [])
+        print(roles)
+        return roles
+    except Exception as e:
+        print("ROLES ERROR: ", e)
         return []
 
 
