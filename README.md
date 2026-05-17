@@ -212,7 +212,7 @@ docker build -t financial-dashboard .
 docker run -p 8080:8080 --env-file ../../.env financial-dashboard
 ```
 
-The dashboard is deployed to **Railway** via Docker. The Dockerfile performs a multi-stage build: Node.js compiles the React frontend, then Python serves it via Flask.
+The dashboard is deployed to **Railway** via Docker (https://reasonable-abundance-production-b4d5.up.railway.app/). The Dockerfile performs a multi-stage build: Node.js compiles the React frontend, then Python serves it via Flask.
 
 ### Live API smoke test
 
