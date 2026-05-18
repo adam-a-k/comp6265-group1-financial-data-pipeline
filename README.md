@@ -1,6 +1,7 @@
 # Financial Market Data Pipeline
 **COMP6265 — Data Integration and Warehousing**  
 University of Southampton — Group 1
+GitHub Repository: https://github.com/adam-a-k/comp6265-group1-financial-data-pipeline
 
 ---
 
